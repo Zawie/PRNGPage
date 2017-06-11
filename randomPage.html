@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<head> <b> Adam's Random Noise </b> </head>
+	<div id = "upperDiv"> </div>
+	<canvas id="myCanvas" width="500" height="500" style="border:1px solid #FF0000"></canvas> <!--Change height width to how many values you want-->
+	<script>
+		var seed = new Date()/1000;
+		var originalSeed = seed;
+	//My Method
+		function adamRandom() {
+			function r(n) {
+				return Math.sqrt(n/Math.PI)*n;
+			}
+			function f(n) {
+				var rn = r(n);
+				return rn - Math.floor(rn);
+			}
+			var randomFactor = f(seed);
+			seed = randomFactor*10000;
+			return randomFactor;
+		}
+	//LCG
+		//glibc
+	    var a =  1103515245;
+        var c = 12345;
+        var m = Math.pow(2,31) - 1;
+    
+	    function lcg() {
+	     seed = (a*seed+c) % m
+	     return seed/m;
+	    }
+		//Middle Squares Method
+		var digits = 9;
+		function middleSquareMethod() {
+			var n = Math.floor(seed*seed).toString();
+			while(n.length < digits * 2) {
+			n = "0" + n;
+			}
+			var start = Math.floor(digits / 2);
+			var end = start + digits;
+			seed = parseInt(n.substring(start, end));
+			var denom = Math.pow(10,digits)-1;
+			return seed/denom;
+		}
+		
+		// Create Noise
+		var canvas = document.getElementById("myCanvas");
+		var ctx = canvas.getContext("2d");
+		function drawPixel(x,y,r,scale) {
+    		ctx.globalAlpha = r;
+			ctx.fillRect(x,y,scale,scale);
+		}
+
+		//Run Function
+		var width = ctx.canvas.width,
+			height = ctx.canvas.height;
+		var scale = 1;
+		var digitdata = new Array();
+		var rawdata = new Array();	
+		for (y = 1; y < height; y+=scale) {
+			for(x = 1; x < width; x+=scale) {
+				var r = adamRandom(); // change this to whatever function you want to run
+				rawdata.push(r);
+				var digit = Math.floor(r*10);
+				digitdata[digit] = (digitdata[digit] || 0) + 1;
+				drawPixel(x,y,r,scale);
+			}
+			//console.log(y/height*100+"%") //Show how long it's come a long
+		}
+
+		console.log("Calculating Stats:")
+		//Calculate Mean and Standard Deviation
+		function getMean(table) {
+			var sum = 0;
+			for (i=0; i<(table.length); i++) {
+				sum += table[i];
+			}
+			return sum/table.length;
+		}
+
+		function getStandardDeviation(table) {
+			var mean = getMean(table);
+			var n = table.length;
+			var squaredSum = 0;
+			for (i=0; i<(n); i++) {
+				squaredSum += Math.pow(table[i] - mean,2)
+			}
+			var variance = squaredSum/n;
+			var stdev = Math.sqrt(variance);
+			return stdev;
+		};
+
+		function getPeriod(table) {
+			var periodLength = 0;
+			var usedTab = new Array();
+			for (i=0; i<(table.length); i++) {
+				if(usedTab.includes(table[i])){
+					console.log("reapeat!");
+					break
+				}
+				periodLength += 1;
+				usedTab.push(table[i]);
+			}
+			return periodLength;
+		}
+
+		function display(str) {
+			upperDiv.innerHTML = upperDiv.innerHTML + str;
+		}
+		//Display the precentage of each value, standard deviation, and mean
+		var upperDiv = document.getElementById("upperDiv"); 
+		for (i= 0; i < 10; i++) {
+			display("<p> <b>[" + i + "]</b>: " + digitdata[i] + " ("+ Math.floor(digitdata[i]/(width*height)*10000)/100 + "%)</p>");
+		}
+		display("<p> <b> Original Seed: </b>" + originalSeed + "</p>")
+		//display("<p> <b> Period Length: </b>" + getPeriod(rawdata) + "</p>");
+		//display("<p> <b> Mean: </b>" + getMean(rawdata) + "</p>");
+		//display("<p> <b> Standard Deviation: </b>" + getStandardDeviation(rawdata) + "</p>");
+	</script>
+</body>
+</html>
